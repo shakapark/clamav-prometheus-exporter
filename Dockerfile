@@ -4,9 +4,7 @@ WORKDIR /go/src/github.com/rekzi/clamav-prometheus-exporter/
 COPY . .
 
 ARG VERSION
-
-RUN apk add --no-cache make
-RUN make build VERSION=$VERSION
+RUN CGO_ENABLED=0 && go build -installsuffix 'static' -o clamav-prometheus-exporter -ldflags="-X main.version=${VERSION}" .
 
 # Final stage: the running container.
 # Use a minimal image for running the application
