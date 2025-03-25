@@ -22,4 +22,4 @@ jobs:
       with:
         context: .
         push: true
-        tags: shakapark/clamav-prometheus-exporter:${{ env.GITHUB_REF_SLUG_URL }}
+        tags: shakapark/clamav-prometheus-exporter:${{ env.GITHUB_REF }}
