@@ -22,4 +22,5 @@ jobs:
       with:
         context: .
         push: true
+        build-arg: VERSION=${{ github.ref_name }}
         tags: shakapark/clamav-prometheus-exporter:${{ github.ref_name }}
