@@ -27,8 +27,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/r3kzi/clamav-prometheus-exporter/pkg/clamav"
-	"github.com/r3kzi/clamav-prometheus-exporter/pkg/collector"
+	"github.com/shakapark/clamav-prometheus-exporter/pkg/clamav"
+	"github.com/shakapark/clamav-prometheus-exporter/pkg/collector"
 	log "github.com/sirupsen/logrus"
 )
 
