@@ -17,7 +17,7 @@ package clamav
 import (
 	"bufio"
 	"fmt"
-	"github.com/r3kzi/clamav-prometheus-exporter/pkg/commands"
+	"github.com/shakapark/clamav-prometheus-exporter/pkg/commands"
 	"github.com/stretchr/testify/assert"
 	"net"
 	"regexp"

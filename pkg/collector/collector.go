@@ -17,8 +17,8 @@ package collector
 import (
 	"bytes"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/r3kzi/clamav-prometheus-exporter/pkg/clamav"
-	"github.com/r3kzi/clamav-prometheus-exporter/pkg/commands"
+	"github.com/shakapark/clamav-prometheus-exporter/pkg/clamav"
+	"github.com/shakapark/clamav-prometheus-exporter/pkg/commands"
 	log "github.com/sirupsen/logrus"
 	"math"
 	"regexp"
