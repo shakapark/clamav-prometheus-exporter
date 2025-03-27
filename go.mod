@@ -1,4 +1,4 @@
-module github.com/r3kzi/clamav-prometheus-exporter
+module github.com/shakapark/clamav-prometheus-exporter
 
 go 1.23
 
