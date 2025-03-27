@@ -69,7 +69,7 @@ func init() {
 	flag.StringVar(&address, "clamav-address", "localhost", "ClamAV address to use")
 	flag.IntVar(&port, "clamav-port", 3310, "ClamAV port to use")
 	flag.StringVar(&network, "network", "tcp", "Network mode to use, typically tcp or unix (socket)")
-	flag.StringVar(&reportScanPath, "", "report-scan-path", "Path to clamscan report file (keep empty if you don't use clamscan)")
+	flag.StringVar(&reportScanPath, "report-scan-path", "", "Path to clamscan report file (keep empty if you don't use clamscan)")
 	flag.StringVar(&logLevel, "log-level", "info", "Set the level of logging. (options: trace, debug, info, warn, error, fatal, panic)")
 
 	flag.Parse()
