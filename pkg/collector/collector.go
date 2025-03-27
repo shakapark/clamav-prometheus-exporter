@@ -16,18 +16,19 @@ package collector
 
 import (
 	"bytes"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/shakapark/clamav-prometheus-exporter/pkg/clamav"
-	"github.com/shakapark/clamav-prometheus-exporter/pkg/commands"
-	log "github.com/sirupsen/logrus"
 	"math"
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/shakapark/clamav-prometheus-exporter/pkg/clamav"
+	"github.com/shakapark/clamav-prometheus-exporter/pkg/commands"
+	log "github.com/sirupsen/logrus"
 )
 
-// Collector satisfies prometheus.Collector interface
-type Collector struct {
+// ClamavCollector satisfies prometheus.Collector interface
+type ClamavCollector struct {
 	client      clamav.Client
 	up          *prometheus.Desc
 	threadsLive *prometheus.Desc
@@ -43,27 +44,30 @@ type Collector struct {
 	databaseAge *prometheus.Desc
 }
 
-// New creates a Collector struct
-func New(client clamav.Client) *Collector {
-	return &Collector{
-		client:      client,
-		up:          prometheus.NewDesc("clamav_up", "Shows UP Status", nil, nil),
-		threadsLive: prometheus.NewDesc("clamav_threads_live", "Shows live threads", nil, nil),
-		threadsIdle: prometheus.NewDesc("clamav_threads_idle", "Shows idle threads", nil, nil),
-		threadsMax:  prometheus.NewDesc("clamav_threads_max", "Shows max threads", nil, nil),
-		queue:       prometheus.NewDesc("clamav_queue_length", "Shows queued items", nil, nil),
-		memHeap:     prometheus.NewDesc("clamav_mem_heap_bytes", "Shows heap memory usage in bytes", nil, nil),
-		memMmap:     prometheus.NewDesc("clamav_mem_mmap_bytes", "Shows mmap memory usage in bytes", nil, nil),
-		memUsed:     prometheus.NewDesc("clamav_mem_used_bytes", "Shows used memory in bytes", nil, nil),
-		poolsUsed:   prometheus.NewDesc("clamav_pools_used_bytes", "Shows memory used by memory pool allocator for the signature database in bytes", nil, nil),
-		poolsTotal:  prometheus.NewDesc("clamav_pools_total_bytes", "Shows total memory allocated by memory pool allocator for the signature database in bytes", nil, nil),
-		buildInfo:   prometheus.NewDesc("clamav_build_info", "Shows ClamAV Build Info", []string{"clamav_version", "database_version"}, nil),
-		databaseAge: prometheus.NewDesc("clamav_database_age", "Shows ClamAV signature database age in seconds", nil, nil),
-	}
+// New creates a ClamavCollector struct
+func New(client clamav.Client, reportFilePath string) (*ClamavCollector, *ClamscanCollector) {
+	return &ClamavCollector{
+			client:      client,
+			up:          prometheus.NewDesc("clamav_up", "Shows UP Status", nil, nil),
+			threadsLive: prometheus.NewDesc("clamav_threads_live", "Shows live threads", nil, nil),
+			threadsIdle: prometheus.NewDesc("clamav_threads_idle", "Shows idle threads", nil, nil),
+			threadsMax:  prometheus.NewDesc("clamav_threads_max", "Shows max threads", nil, nil),
+			queue:       prometheus.NewDesc("clamav_queue_length", "Shows queued items", nil, nil),
+			memHeap:     prometheus.NewDesc("clamav_mem_heap_bytes", "Shows heap memory usage in bytes", nil, nil),
+			memMmap:     prometheus.NewDesc("clamav_mem_mmap_bytes", "Shows mmap memory usage in bytes", nil, nil),
+			memUsed:     prometheus.NewDesc("clamav_mem_used_bytes", "Shows used memory in bytes", nil, nil),
+			poolsUsed:   prometheus.NewDesc("clamav_pools_used_bytes", "Shows memory used by memory pool allocator for the signature database in bytes", nil, nil),
+			poolsTotal:  prometheus.NewDesc("clamav_pools_total_bytes", "Shows total memory allocated by memory pool allocator for the signature database in bytes", nil, nil),
+			buildInfo:   prometheus.NewDesc("clamav_build_info", "Shows ClamAV Build Info", []string{"clamav_version", "database_version"}, nil),
+			databaseAge: prometheus.NewDesc("clamav_database_age", "Shows ClamAV signature database age in seconds", nil, nil),
+		}, &ClamscanCollector{
+			clamScanFilePath: reportFilePath,
+			up:               prometheus.NewDesc("clamscan_report_file", "Shows if report file is found", []string{"file_path"}, nil),
+		}
 }
 
 // Describe satisfies prometheus.Collector.Describe
-func (collector *Collector) Describe(ch chan<- *prometheus.Desc) {
+func (collector *ClamavCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- collector.up
 	ch <- collector.threadsLive
 	ch <- collector.threadsIdle
@@ -79,7 +83,7 @@ func (collector *Collector) Describe(ch chan<- *prometheus.Desc) {
 }
 
 // Collect satisfies prometheus.Collector.Collect
-func (collector *Collector) Collect(ch chan<- prometheus.Metric) {
+func (collector *ClamavCollector) Collect(ch chan<- prometheus.Metric) {
 	pong := collector.client.Dial(commands.PING)
 	if bytes.Equal(pong, []byte{'P', 'O', 'N', 'G', '\n'}) {
 		ch <- prometheus.MustNewConstMetric(collector.up, prometheus.GaugeValue, 1)
@@ -108,7 +112,7 @@ func float(s string) float64 {
 	return float
 }
 
-func (collector *Collector) CollectMemoryStats(ch chan<- prometheus.Metric, stats string) {
+func (collector *ClamavCollector) CollectMemoryStats(ch chan<- prometheus.Metric, stats string) {
 	regex := regexp.MustCompile(`(?:MEMSTATS:\sheap|mmap|used|free|releasable|pools|pools_used|pools_total)\s+([0-9.]+|N\/A)+`)
 	matches := regex.FindAllStringSubmatch(stats, -1)
 
@@ -129,7 +133,7 @@ func (collector *Collector) CollectMemoryStats(ch chan<- prometheus.Metric, stat
 	}
 }
 
-func (collector *Collector) CollectThreads(ch chan<- prometheus.Metric, stats string) {
+func (collector *ClamavCollector) CollectThreads(ch chan<- prometheus.Metric, stats string) {
 	regex := regexp.MustCompile(`(?:THREADS:\slive|idle|max|idle-timeout)\s+([0-9.]+|N\/A)+`)
 	matches := regex.FindAllStringSubmatch(stats, -1)
 
@@ -146,7 +150,7 @@ func (collector *Collector) CollectThreads(ch chan<- prometheus.Metric, stats st
 	}
 }
 
-func (collector *Collector) CollectQueue(ch chan<- prometheus.Metric, stats string) {
+func (collector *ClamavCollector) CollectQueue(ch chan<- prometheus.Metric, stats string) {
 	regex := regexp.MustCompile(`(?:QUEUE:|FILDES|STATS)\s+([0-9.]+|N\/A)`)
 	matches := regex.FindAllStringSubmatch(stats, -1)
 
@@ -159,7 +163,7 @@ func (collector *Collector) CollectQueue(ch chan<- prometheus.Metric, stats stri
 	}
 }
 
-func (collector *Collector) CollectBuildInfo(ch chan<- prometheus.Metric) {
+func (collector *ClamavCollector) CollectBuildInfo(ch chan<- prometheus.Metric) {
 	// The return of this should be something like: ClamAV 1.4.1/27523/Sun Jan 19 09:40:50 2025
 	version := collector.client.Dial(commands.VERSION)
 	regex := regexp.MustCompile(`ClamAV\s([0-9.]*)/(\d+)/(.+)`)
