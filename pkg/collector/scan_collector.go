@@ -26,7 +26,8 @@ func (collector *ClamscanCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	if collector.clamScanReport.GetErrFile() != nil {
-		ch <- prometheus.MustNewConstMetric(collector.up, prometheus.GaugeValue, 0, "")
+		ch <- prometheus.MustNewConstMetric(collector.up, prometheus.GaugeValue, 0, collector.clamScanReport.GetFilepath())
+		return
 	}
 
 	ch <- prometheus.MustNewConstMetric(collector.up, prometheus.GaugeValue, 1, collector.clamScanReport.GetFilepath())

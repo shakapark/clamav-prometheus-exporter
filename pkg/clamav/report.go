@@ -12,15 +12,16 @@ import (
 // ScanReport corresponds to a ClamScan report file
 type ScanReport struct {
 	filePath      string
-	countLineRead int
-	errFile       error
+	countLineRead *int
+	errFile       *error
 }
 
 // NewScanReport create a new ScanReport
 func NewScanReport(path string) *ScanReport {
+	clr := 0
 	return &ScanReport{
 		filePath:      path,
-		countLineRead: 0,
+		countLineRead: &clr,
 		errFile:       nil,
 	}
 }
@@ -30,11 +31,11 @@ func (sr *ScanReport) GetFilepath() string {
 }
 
 func (sr *ScanReport) GetLineCount() int {
-	return sr.countLineRead
+	return *sr.countLineRead
 }
 
 func (sr *ScanReport) GetErrFile() error {
-	return sr.errFile
+	return *sr.errFile
 }
 
 func (sr *ScanReport) Tail() {
@@ -43,7 +44,7 @@ func (sr *ScanReport) Tail() {
 	file, err := os.Open(sr.filePath)
 	if err != nil {
 		log.Error("Error reading file: ", err)
-		sr.errFile = err
+		sr.errFile = &err
 		return
 	}
 	defer file.Close()
@@ -72,7 +73,8 @@ func (sr *ScanReport) Tail() {
 			break
 		}
 		log.Debug("New line read: " + line)
-		sr.countLineRead++
+		cl := *sr.countLineRead + 1
+		sr.countLineRead = &cl
 	}
 
 }
