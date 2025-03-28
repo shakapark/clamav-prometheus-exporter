@@ -30,12 +30,12 @@ func (sr *ScanReport) GetFilepath() string {
 	return sr.filePath
 }
 
-func (sr *ScanReport) GetLineCount() int {
-	return *sr.countLineRead
+func (sr *ScanReport) GetLineCount() *int {
+	return sr.countLineRead
 }
 
-func (sr *ScanReport) GetErrFile() error {
-	return *sr.errFile
+func (sr *ScanReport) GetErrFile() *error {
+	return sr.errFile
 }
 
 func (sr *ScanReport) Tail() {

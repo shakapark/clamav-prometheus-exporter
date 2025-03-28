@@ -31,7 +31,7 @@ func (collector *ClamscanCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	ch <- prometheus.MustNewConstMetric(collector.up, prometheus.GaugeValue, 1, collector.clamScanReport.GetFilepath())
-	ch <- prometheus.MustNewConstMetric(collector.countLine, prometheus.GaugeValue, float64(collector.clamScanReport.GetLineCount()))
+	ch <- prometheus.MustNewConstMetric(collector.countLine, prometheus.GaugeValue, float64(*collector.clamScanReport.GetLineCount()))
 
 }
 
