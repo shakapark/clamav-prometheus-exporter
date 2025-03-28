@@ -7,7 +7,7 @@ import (
 
 // ClamavCollector satisfies prometheus.Collector interface
 type ClamscanCollector struct {
-	clamScanReport clamav.ScanReport
+	clamScanReport *clamav.ScanReport
 	up             *prometheus.Desc
 	countLine      *prometheus.Desc
 }

@@ -45,7 +45,7 @@ type ClamavCollector struct {
 }
 
 // New creates a ClamavCollector struct
-func New(client clamav.Client, report clamav.ScanReport) (*ClamavCollector, *ClamscanCollector) {
+func New(client clamav.Client, report *clamav.ScanReport) (*ClamavCollector, *ClamscanCollector) {
 	return &ClamavCollector{
 			client:      client,
 			up:          prometheus.NewDesc("clamav_up", "Shows UP Status", nil, nil),
