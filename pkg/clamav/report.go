@@ -42,6 +42,7 @@ func (sr *ScanReport) Tail() {
 
 	file, err := os.Open(sr.filePath)
 	if err != nil {
+		log.Error("Error reading file: ")
 		sr.errFile = err
 		return
 	}
