@@ -45,7 +45,7 @@ type ClamavCollector struct {
 }
 
 // New creates a ClamavCollector struct
-func New(client clamav.Client, reportFilePath string) (*ClamavCollector, *ClamscanCollector) {
+func New(client clamav.Client, report clamav.ScanReport) (*ClamavCollector, *ClamscanCollector) {
 	return &ClamavCollector{
 			client:      client,
 			up:          prometheus.NewDesc("clamav_up", "Shows UP Status", nil, nil),
@@ -61,8 +61,9 @@ func New(client clamav.Client, reportFilePath string) (*ClamavCollector, *Clamsc
 			buildInfo:   prometheus.NewDesc("clamav_build_info", "Shows ClamAV Build Info", []string{"clamav_version", "database_version"}, nil),
 			databaseAge: prometheus.NewDesc("clamav_database_age", "Shows ClamAV signature database age in seconds", nil, nil),
 		}, &ClamscanCollector{
-			clamScanFilePath: reportFilePath,
-			up:               prometheus.NewDesc("clamscan_report_file", "Shows if report file is found", []string{"file_path"}, nil),
+			clamScanReport: report,
+			up:             prometheus.NewDesc("clamscan_report_file", "Shows if report file is found", []string{"file_path"}, nil),
+			countLine:      prometheus.NewDesc("clamscan_report_file_count_line", "Shows how many line has been read report file", nil, nil),
 		}
 }
 

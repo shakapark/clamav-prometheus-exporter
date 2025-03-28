@@ -86,7 +86,9 @@ func main() {
 	}
 
 	client := clamav.New(address, network)
-	clamavCollector, clamscanCollector := collector.New(*client, reportScanPath)
+	reportScan := clamav.NewScanReport(reportScanPath)
+	go reportScan.Tail()
+	clamavCollector, clamscanCollector := collector.New(*client, *reportScan)
 	prometheus.MustRegister(clamavCollector)
 	prometheus.MustRegister(clamscanCollector)
 
