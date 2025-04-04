@@ -105,7 +105,7 @@ func isTruncated(file *os.File) (bool, error) {
 }
 
 func parseLine(l string) (int, int, int) {
-	if l == "--------------------------------------" || l == "----------- SCAN SUMMARY -----------" || l == "" {
+	if l == "--------------------------------------\n" || l == "----------- SCAN SUMMARY -----------\n" || l == "\n" {
 		return 0, 1, 0
 	}
 	log.Error("Unknown line: " + l)
