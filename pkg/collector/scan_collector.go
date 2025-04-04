@@ -7,21 +7,21 @@ import (
 
 // ClamavCollector satisfies prometheus.Collector interface
 type ClamscanCollector struct {
-	clamScanReport    *clamav.ScanReport
-	up                *prometheus.Desc
-	countTotaltLine   *prometheus.Desc
-	countParsedtLine  *prometheus.Desc
-	countIgnoredtLine *prometheus.Desc
-	countUnknownLine  *prometheus.Desc
+	clamScanReport *clamav.ScanReport
+	up             *prometheus.Desc
+	countLine      *prometheus.Desc
+	// countParsedtLine  *prometheus.Desc
+	// countIgnoredtLine *prometheus.Desc
+	// countUnknownLine  *prometheus.Desc
 }
 
 // Describe satisfies prometheus.Collector.Describe
 func (collector *ClamscanCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- collector.up
-	ch <- collector.countTotaltLine
-	ch <- collector.countParsedtLine
-	ch <- collector.countIgnoredtLine
-	ch <- collector.countUnknownLine
+	ch <- collector.countLine
+	// ch <- collector.countParsedtLine
+	// ch <- collector.countIgnoredtLine
+	// ch <- collector.countUnknownLine
 }
 
 // Collect satisfies prometheus.Collector.Collect
@@ -37,8 +37,8 @@ func (collector *ClamscanCollector) Collect(ch chan<- prometheus.Metric) {
 	}
 
 	ch <- prometheus.MustNewConstMetric(collector.up, prometheus.GaugeValue, 1, collector.clamScanReport.GetFilepath())
-	ch <- prometheus.MustNewConstMetric(collector.countTotaltLine, prometheus.GaugeValue, float64(collector.clamScanReport.GetLineCount()))
-	ch <- prometheus.MustNewConstMetric(collector.countParsedtLine, prometheus.GaugeValue, float64(collector.clamScanReport.GetParsedLineCount()))
-	ch <- prometheus.MustNewConstMetric(collector.countIgnoredtLine, prometheus.GaugeValue, float64(collector.clamScanReport.GetIgnoredLineCount()))
-	ch <- prometheus.MustNewConstMetric(collector.countUnknownLine, prometheus.GaugeValue, float64(collector.clamScanReport.GetUnknownLineCount()))
+	ch <- prometheus.MustNewConstMetric(collector.countLine, prometheus.GaugeValue, float64(collector.clamScanReport.GetLineCount()), "total")
+	ch <- prometheus.MustNewConstMetric(collector.countLine, prometheus.GaugeValue, float64(collector.clamScanReport.GetParsedLineCount()), "parsed")
+	ch <- prometheus.MustNewConstMetric(collector.countLine, prometheus.GaugeValue, float64(collector.clamScanReport.GetIgnoredLineCount()), "ignored")
+	ch <- prometheus.MustNewConstMetric(collector.countLine, prometheus.GaugeValue, float64(collector.clamScanReport.GetUnknownLineCount()), "unknown")
 }
