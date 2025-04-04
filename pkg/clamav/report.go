@@ -54,20 +54,16 @@ func (sr *ScanReport) GetErrFile() error {
 }
 
 func (sr *ScanReport) increaseLineCount(i int) {
-	cl := sr.countLineRead + i
-	sr.countLineRead = cl
+	sr.countLineRead = sr.countLineRead + i
 }
 func (sr *ScanReport) increaseParsedLineCount(i int) {
-	cl := sr.countLineRead + i
-	sr.countLineRead = cl
+	sr.countLineParsed = sr.countLineParsed + i
 }
 func (sr *ScanReport) increaseIgnoredLineCount(i int) {
-	cl := sr.countLineRead + i
-	sr.countLineRead = cl
+	sr.countLineIgnored = sr.countLineIgnored + i
 }
 func (sr *ScanReport) increaseUnknownLineCount(i int) {
-	cl := sr.countLineRead + i
-	sr.countLineRead = cl
+	sr.countLineUnknown = sr.countLineUnknown + i
 }
 
 func (sr *ScanReport) Tail() {
