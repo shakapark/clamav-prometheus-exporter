@@ -12,36 +12,62 @@ import (
 
 // ScanReport corresponds to a ClamScan report file
 type ScanReport struct {
-	filePath      string
-	countLineRead *int
-	errFile       *error
+	filePath         string
+	countLineRead    int
+	countLineParsed  int
+	countLineIgnored int
+	countLineUnknown int
+	errFile          error
 }
 
 // NewScanReport create a new ScanReport
 func NewScanReport(path string) *ScanReport {
-	clr := 0
+	countInit := 0
 	return &ScanReport{
-		filePath:      path,
-		countLineRead: &clr,
-		errFile:       nil,
+		filePath:         path,
+		countLineRead:    countInit,
+		countLineParsed:  countInit,
+		countLineIgnored: countInit,
+		countLineUnknown: countInit,
+		errFile:          nil,
 	}
 }
 
 func (sr *ScanReport) GetFilepath() string {
 	return sr.filePath
 }
-
-func (sr *ScanReport) GetLineCount() *int {
+func (sr *ScanReport) GetLineCount() int {
 	return sr.countLineRead
 }
+func (sr *ScanReport) GetParsedLineCount() int {
+	return sr.countLineParsed
+}
+func (sr *ScanReport) GetIgnoredLineCount() int {
+	return sr.countLineIgnored
+}
+func (sr *ScanReport) GetUnknownLineCount() int {
+	return sr.countLineUnknown
+}
 
-func (sr *ScanReport) GetErrFile() *error {
+func (sr *ScanReport) GetErrFile() error {
 	return sr.errFile
 }
 
-func (sr *ScanReport) increaseCountLine(i int) {
-	cl := *sr.countLineRead + i
-	sr.countLineRead = &cl
+func (sr *ScanReport) increaseLineCount(i int) {
+	cl := sr.countLineRead + i
+	sr.countLineRead = cl
+}
+func (sr *ScanReport) increaseParsedLineCount(i int) {
+	cl := sr.countLineRead + i
+	sr.countLineRead = cl
+}
+func (sr *ScanReport) increaseIgnoredLineCount(i int) {
+	cl := sr.countLineRead + i
+	sr.countLineRead = cl
+}
+func (sr *ScanReport) increaseUnknownLineCount(i int) {
+	cl := sr.countLineRead + i
+	sr.countLineRead = cl
 }
 
 func (sr *ScanReport) Tail() {
@@ -50,7 +76,7 @@ func (sr *ScanReport) Tail() {
 	file, err := os.Open(sr.filePath)
 	if err != nil {
 		log.Error("Error reading file: ", err)
-		sr.errFile = &err
+		sr.errFile = err
 		return
 	}
 	defer file.Close()
@@ -80,7 +106,7 @@ func (sr *ScanReport) Tail() {
 		}
 		log.Debug("New line read: " + line)
 		// Parse line
-		parsedLine, ignoredLine, unknownLine := parseLine(line)
+		parsedLine, ignoredLine, unknownLine := sr.parseLine(line)
 		if parsedLine {
 			log.Debug("ParsedLine: ", line)
 		}
@@ -91,7 +117,7 @@ func (sr *ScanReport) Tail() {
 			log.Debug("UnknownLine: ", line)
 		}
 
-		sr.increaseCountLine(1)
+		sr.increaseLineCount(1)
 		// cl := *sr.countLineRead + 1
 		// sr.countLineRead = &cl
 	}
@@ -112,40 +138,48 @@ func isTruncated(file *os.File) (bool, error) {
 	return currentPos > fileInfo.Size(), nil
 }
 
-func parseLine(l string) (bool, bool, bool) {
+func (sr *ScanReport) parseLine(l string) (bool, bool, bool) {
 	// List of ignoredLines
-	if l == "--------------------------------------\n" || l == "----------- SCAN SUMMARY -----------\n" || l == "\n" {
+	if l == "--------------------------------------\n" || l == "----------- SCAN SUMMARY -----------\n" || l == "\n" || strings.Contains(l, "ERROR: Could not connect to clamd") {
+		sr.increaseIgnoredLineCount(1)
 		return false, true, false
 	}
 
 	// List of parsedLines
 	if reportStatusHostFS, b := strings.CutPrefix(l, "/host-fs: "); b {
 		log.Debug("HostFS report status: ", reportStatusHostFS)
+		sr.increaseParsedLineCount(1)
 		return true, false, false
 	}
 	if reportInfectedFiles, b := strings.CutPrefix(l, "Infected files: "); b {
 		log.Debug("Report infected files: ", reportInfectedFiles)
+		sr.increaseParsedLineCount(1)
 		return true, false, false
 	}
 	if reportTotalErrors, b := strings.CutPrefix(l, "Total errors: "); b {
 		log.Debug("Report errors: ", reportTotalErrors)
+		sr.increaseParsedLineCount(1)
 		return true, false, false
 	}
 	if reportTime, b := strings.CutPrefix(l, "Time: "); b {
 		log.Debug("Report time: ", reportTime)
+		sr.increaseParsedLineCount(1)
 		return true, false, false
 	}
 	if reportStartDate, b := strings.CutPrefix(l, "Start Date: "); b {
 		log.Debug("Report start date: ", reportStartDate)
+		sr.increaseParsedLineCount(1)
 		return true, false, false
 	}
 	if reportEndDate, b := strings.CutPrefix(l, "End Date: "); b {
 		log.Debug("Report end date: ", reportEndDate)
+		sr.increaseParsedLineCount(1)
 		return true, false, false
 	}
 
 	// Return unknown lines
 	log.Error("Unknown line: " + l)
+	sr.increaseUnknownLineCount(1)
 	return false, false, true
 }
 

@@ -61,9 +61,12 @@ func New(client clamav.Client, report *clamav.ScanReport) (*ClamavCollector, *Cl
 			buildInfo:   prometheus.NewDesc("clamav_build_info", "Shows ClamAV Build Info", []string{"clamav_version", "database_version"}, nil),
 			databaseAge: prometheus.NewDesc("clamav_database_age", "Shows ClamAV signature database age in seconds", nil, nil),
 		}, &ClamscanCollector{
-			clamScanReport: report,
-			up:             prometheus.NewDesc("clamscan_report_file", "Shows if report file is found", []string{"file_path"}, nil),
-			countLine:      prometheus.NewDesc("clamscan_report_file_count_line", "Shows how many line has been read report file", nil, nil),
+			clamScanReport:    report,
+			up:                prometheus.NewDesc("clamscan_report_file", "Shows if report file is found", []string{"file_path"}, nil),
+			countTotaltLine:   prometheus.NewDesc("clamscan_report_file_count_line", "DEBUG: Shows how many line has been read report file", nil, nil),
+			countParsedtLine:  prometheus.NewDesc("clamscan_report_file_count_line_parsed", "DEBUG: Shows how many line has been parsed in report file", nil, nil),
+			countIgnoredtLine: prometheus.NewDesc("clamscan_report_file_count_line_ignored", "DEBUG: Shows how many line has been ignored in report file", nil, nil),
+			countUnknownLine:  prometheus.NewDesc("clamscan_report_file_count_line_unknown", "DEBUG: Shows how many line has been unknown in report file", nil, nil),
 		}
 }
 
