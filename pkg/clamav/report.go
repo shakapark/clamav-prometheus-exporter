@@ -38,6 +38,11 @@ func (sr *ScanReport) GetErrFile() *error {
 	return sr.errFile
 }
 
+func (sr *ScanReport) increaseCountLine(i int) {
+	cl := *sr.countLineRead + i
+	sr.countLineRead = &cl
+}
+
 func (sr *ScanReport) Tail() {
 	log.Debug("Begin to read file: " + sr.filePath)
 
@@ -73,8 +78,14 @@ func (sr *ScanReport) Tail() {
 			break
 		}
 		log.Debug("New line read: " + line)
-		cl := *sr.countLineRead + 1
-		sr.countLineRead = &cl
+		// Parse line
+		parsedLine, ignoredLine, unknownLine := parseLine(line)
+		log.Debug("ParsedLine: ", parsedLine)
+		log.Debug("IgnoredLine: ", ignoredLine)
+		log.Debug("UnknownLine: ", unknownLine)
+		sr.increaseCountLine(1)
+		// cl := *sr.countLineRead + 1
+		// sr.countLineRead = &cl
 	}
 
 }
@@ -92,3 +103,21 @@ func isTruncated(file *os.File) (bool, error) {
 	}
 	return currentPos > fileInfo.Size(), nil
 }
+
+func parseLine(l string) (int, int, int) {
+	if l == "--------------------------------------" || l == "----------- SCAN SUMMARY -----------" || l == "" {
+		return 0, 1, 0
+	}
+	log.Error("Unknown line: " + l)
+	return 0, 0, 1
+}
+
+// --------------------------------------
+// /host-fs: OK
+
+// ----------- SCAN SUMMARY -----------
+// Infected files: 0
+// Total errors: 2
+// Time: 3609.617 sec (60 m 9 s)
+// Start Date: 2025:03:27 16:14:48
+// End Date:   2025:03:27 17:14:58

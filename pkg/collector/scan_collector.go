@@ -34,10 +34,3 @@ func (collector *ClamscanCollector) Collect(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(collector.countLine, prometheus.GaugeValue, float64(*collector.clamScanReport.GetLineCount()))
 
 }
-
-// ----------- SCAN SUMMARY -----------
-// Infected files: 0
-// Total errors: 2
-// Time: 3609.617 sec (60 m 9 s)
-// Start Date: 2025:03:27 16:14:48
-// End Date:   2025:03:27 17:14:58
