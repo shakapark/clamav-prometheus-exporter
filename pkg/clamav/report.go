@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"io"
 	"os"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -80,9 +81,16 @@ func (sr *ScanReport) Tail() {
 		log.Debug("New line read: " + line)
 		// Parse line
 		parsedLine, ignoredLine, unknownLine := parseLine(line)
-		log.Debug("ParsedLine: ", parsedLine)
-		log.Debug("IgnoredLine: ", ignoredLine)
-		log.Debug("UnknownLine: ", unknownLine)
+		if parsedLine {
+			log.Debug("ParsedLine: ", line)
+		}
+		if ignoredLine {
+			log.Debug("IgnoredLine: ", line)
+		}
+		if unknownLine {
+			log.Debug("UnknownLine: ", line)
+		}
+
 		sr.increaseCountLine(1)
 		// cl := *sr.countLineRead + 1
 		// sr.countLineRead = &cl
@@ -104,12 +112,41 @@ func isTruncated(file *os.File) (bool, error) {
 	return currentPos > fileInfo.Size(), nil
 }
 
-func parseLine(l string) (int, int, int) {
+func parseLine(l string) (bool, bool, bool) {
+	// List of ignoredLines
 	if l == "--------------------------------------\n" || l == "----------- SCAN SUMMARY -----------\n" || l == "\n" {
-		return 0, 1, 0
+		return false, true, false
 	}
+
+	// List of parsedLines
+	if reportStatusHostFS, b := strings.CutPrefix(l, "/host-fs: "); b {
+		log.Debug("HostFS report status: ", reportStatusHostFS)
+		return true, false, false
+	}
+	if reportInfectedFiles, b := strings.CutPrefix(l, "Infected files: "); b {
+		log.Debug("Report infected files: ", reportInfectedFiles)
+		return true, false, false
+	}
+	if reportTotalErrors, b := strings.CutPrefix(l, "Total errors: "); b {
+		log.Debug("Report errors: ", reportTotalErrors)
+		return true, false, false
+	}
+	if reportTime, b := strings.CutPrefix(l, "Time: "); b {
+		log.Debug("Report time: ", reportTime)
+		return true, false, false
+	}
+	if reportStartDate, b := strings.CutPrefix(l, "Start Date: "); b {
+		log.Debug("Report start date: ", reportStartDate)
+		return true, false, false
+	}
+	if reportEndDate, b := strings.CutPrefix(l, "End Date: "); b {
+		log.Debug("Report end date: ", reportEndDate)
+		return true, false, false
+	}
+
+	// Return unknown lines
 	log.Error("Unknown line: " + l)
-	return 0, 0, 1
+	return false, false, true
 }
 
 // --------------------------------------
