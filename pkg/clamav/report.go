@@ -229,7 +229,7 @@ func (sr *ScanReport) parseLine(l string) {
 	}
 	if reportTime, b := strings.CutPrefix(l, "Time: "); b {
 		log.Debug("Report time: ", cleanString(reportTime))
-		duration, errParseDuration := time.ParseDuration(cleanString(reportTime) + "s")
+		duration, errParseDuration := time.ParseDuration(cleanString(strings.Split(reportTime, " ")[0]) + "s")
 		if errParseDuration != nil {
 			log.Error("Error converting report time to duration: ", errParseDuration)
 		}
