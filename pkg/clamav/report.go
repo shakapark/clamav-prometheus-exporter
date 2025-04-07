@@ -158,9 +158,10 @@ func (sr *ScanReport) Tail() {
 			}
 			break
 		}
-		log.Debug("New line read: " + line)
+		cleanLine := strings.TrimSuffix(line, "\n")
+		log.Debug("New line read: " + cleanLine)
 		// Parse line
-		sr.parseLine(line)
+		sr.parseLine(cleanLine)
 
 		sr.increaseLineCount(1)
 		// cl := *sr.countLineRead + 1
@@ -185,7 +186,7 @@ func isTruncated(file *os.File) (bool, error) {
 
 func (sr *ScanReport) parseLine(l string) {
 	// List of ignoredLines
-	if l == "--------------------------------------\n" || l == "----------- SCAN SUMMARY -----------\n" || l == "\n" || strings.Contains(l, "ERROR: Could not connect to clamd") {
+	if l == "--------------------------------------" || l == "----------- SCAN SUMMARY -----------" || l == "" || strings.Contains(l, "ERROR: Could not connect to clamd") {
 		sr.increaseIgnoredLineCount(1)
 		return
 	}
