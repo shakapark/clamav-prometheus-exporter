@@ -61,12 +61,15 @@ func New(client clamav.Client, report *clamav.ScanReport) (*ClamavCollector, *Cl
 			buildInfo:   prometheus.NewDesc("clamav_build_info", "Shows ClamAV Build Info", []string{"clamav_version", "database_version"}, nil),
 			databaseAge: prometheus.NewDesc("clamav_database_age", "Shows ClamAV signature database age in seconds", nil, nil),
 		}, &ClamscanCollector{
-			clamScanReport: report,
-			up:             prometheus.NewDesc("clamscan_report_file", "Shows if report file is found", []string{"file_path"}, nil),
-			countLine:      prometheus.NewDesc("clamscan_report_file_count_line", "DEBUG: Shows how many line has been read report file", []string{"type"}, nil),
-			// countParsedtLine:  prometheus.NewDesc("clamscan_report_file_count_line_parsed", "DEBUG: Shows how many line has been parsed in report file", nil, nil),
-			// countIgnoredtLine: prometheus.NewDesc("clamscan_report_file_count_line_ignored", "DEBUG: Shows how many line has been ignored in report file", nil, nil),
-			// countUnknownLine:  prometheus.NewDesc("clamscan_report_file_count_line_unknown", "DEBUG: Shows how many line has been unknown in report file", nil, nil),
+			clamScanReport:        report,
+			up:                    prometheus.NewDesc("clamscan_report_file", "Shows if report file is found", []string{"file_path"}, nil),
+			countLine:             prometheus.NewDesc("clamscan_report_file_count_line", "DEBUG: Shows how many line has been read report file", []string{"type"}, nil),
+			lastScanStartTime:     prometheus.NewDesc("clamscan_report_start_time", "Timestamp's start of last scan", nil, nil),
+			lastScanEndTime:       prometheus.NewDesc("clamscan_report_end_time", "Timestamp's end of last scan", nil, nil),
+			lastScanDuration:      prometheus.NewDesc("clamscan_report_duration", "Time duration of last scan in seconds", nil, nil),
+			lastScanStatus:        prometheus.NewDesc("clamscan_report_status", "Last scan status", nil, nil),
+			lastScanInfectedFiles: prometheus.NewDesc("clamscan_report_infected_files", "Last scan count infected files", nil, nil),
+			lastScanErrors:        prometheus.NewDesc("clamscan_report_errors", "Last scan count errors", nil, nil),
 		}
 }
 

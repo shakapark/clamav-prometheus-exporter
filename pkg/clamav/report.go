@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,22 +18,34 @@ type ScanReport struct {
 	countLineParsed  int
 	countLineIgnored int
 	countLineUnknown int
+	reportStatus     bool
+	totalErrors      int
+	infectedFiles    int
+	scanDuration     time.Duration
+	scanStartTime    time.Time
+	scanEndTime      time.Time
 	errFile          error
 }
 
 // NewScanReport create a new ScanReport
 func NewScanReport(path string) *ScanReport {
-	countInit := 0
 	return &ScanReport{
 		filePath:         path,
-		countLineRead:    countInit,
-		countLineParsed:  countInit,
-		countLineIgnored: countInit,
-		countLineUnknown: countInit,
+		countLineRead:    0,
+		countLineParsed:  0,
+		countLineIgnored: 0,
+		countLineUnknown: 0,
+		reportStatus:     false,
+		totalErrors:      0,
+		infectedFiles:    0,
+		scanDuration:     0,
+		scanStartTime:    time.Now(),
+		scanEndTime:      time.Now(),
 		errFile:          nil,
 	}
 }
 
+// Get functions
 func (sr *ScanReport) GetFilepath() string {
 	return sr.filePath
 }
@@ -48,11 +61,56 @@ func (sr *ScanReport) GetIgnoredLineCount() int {
 func (sr *ScanReport) GetUnknownLineCount() int {
 	return sr.countLineUnknown
 }
-
+func (sr *ScanReport) GetReportStatus() bool {
+	return sr.reportStatus
+}
+func (sr *ScanReport) GetIntReportStatus() int {
+	if sr.reportStatus {
+		return 1
+	} else {
+		return 0
+	}
+}
+func (sr *ScanReport) GetTotalErrors() int {
+	return sr.totalErrors
+}
+func (sr *ScanReport) GetInfectedFiles() int {
+	return sr.infectedFiles
+}
+func (sr *ScanReport) GetScanDuration() time.Duration {
+	return sr.scanDuration
+}
+func (sr *ScanReport) GetScanStartTime() time.Time {
+	return sr.scanStartTime
+}
+func (sr *ScanReport) GetScanEndTime() time.Time {
+	return sr.scanEndTime
+}
 func (sr *ScanReport) GetErrFile() error {
 	return sr.errFile
 }
 
+// Set functions
+func (sr *ScanReport) setReportStatus(b bool) {
+	sr.reportStatus = b
+}
+func (sr *ScanReport) setTotalErrors(i int) {
+	sr.totalErrors = i
+}
+func (sr *ScanReport) setInfectedFiles(i int) {
+	sr.infectedFiles = i
+}
+func (sr *ScanReport) setScanDuration(d time.Duration) {
+	sr.scanDuration = d
+}
+func (sr *ScanReport) setScanStartTime(t time.Time) {
+	sr.scanStartTime = t
+}
+func (sr *ScanReport) setScanEndTime(t time.Time) {
+	sr.scanEndTime = t
+}
+
+// Increase function for count variables
 func (sr *ScanReport) increaseLineCount(i int) {
 	sr.countLineRead = sr.countLineRead + i
 }
@@ -135,31 +193,63 @@ func (sr *ScanReport) parseLine(l string) {
 	// List of parsedLines
 	if reportStatusHostFS, b := strings.CutPrefix(l, "/host-fs: "); b {
 		log.Debug("HostFS report status: ", reportStatusHostFS)
+
+		if reportStatusHostFS == "OK" {
+			sr.setReportStatus(true)
+		} else {
+			sr.setReportStatus(false)
+		}
+
 		sr.increaseParsedLineCount(1)
 		return
 	}
 	if reportInfectedFiles, b := strings.CutPrefix(l, "Infected files: "); b {
 		log.Debug("Report infected files: ", reportInfectedFiles)
+		infectedFiles, errConvInt := strconv.Atoi(reportInfectedFiles)
+		if errConvInt != nil {
+			log.Error("Error converting infected files to int: ", errConvInt)
+		}
+		sr.setInfectedFiles(infectedFiles)
 		sr.increaseParsedLineCount(1)
 		return
 	}
 	if reportTotalErrors, b := strings.CutPrefix(l, "Total errors: "); b {
 		log.Debug("Report errors: ", reportTotalErrors)
+		totalErrors, errConvInt := strconv.Atoi(reportTotalErrors)
+		if errConvInt != nil {
+			log.Error("Error converting total errors to int: ", errConvInt)
+		}
+		sr.setTotalErrors(totalErrors)
 		sr.increaseParsedLineCount(1)
 		return
 	}
 	if reportTime, b := strings.CutPrefix(l, "Time: "); b {
 		log.Debug("Report time: ", reportTime)
+		duration, errParseDuration := time.ParseDuration(strings.Split(reportTime, " ")[0] + "s")
+		if errParseDuration != nil {
+			log.Error("Error converting report time to duration: ", errParseDuration)
+		}
+		sr.setScanDuration(duration)
 		sr.increaseParsedLineCount(1)
 		return
 	}
 	if reportStartDate, b := strings.CutPrefix(l, "Start Date: "); b {
 		log.Debug("Report start date: ", reportStartDate)
+		startDate, errParseTime := time.Parse("2006:01:02 15:04:05", reportStartDate)
+		if errParseTime != nil {
+			log.Error("Error converting report time to duration: ", errParseTime)
+		}
+		sr.setScanStartTime(startDate)
 		sr.increaseParsedLineCount(1)
 		return
 	}
 	if reportEndDate, b := strings.CutPrefix(l, "End Date: "); b {
 		log.Debug("Report end date: ", reportEndDate)
+		endDate, errParseTime := time.Parse("2006:01:02 15:04:05", reportEndDate)
+		if errParseTime != nil {
+			log.Error("Error converting report time to duration: ", errParseTime)
+		}
+		sr.setScanEndTime(endDate)
 		sr.increaseParsedLineCount(1)
 		return
 	}
