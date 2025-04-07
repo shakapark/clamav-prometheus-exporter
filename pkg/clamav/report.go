@@ -158,10 +158,9 @@ func (sr *ScanReport) Tail() {
 			}
 			break
 		}
-		cleanLine := strings.TrimSuffix(line, "\n")
-		log.Debug("New line read: " + cleanLine)
+		log.Debug("New line read: " + cleanString(line))
 		// Parse line
-		sr.parseLine(cleanLine)
+		sr.parseLine(cleanString(line))
 
 		sr.increaseLineCount(1)
 		// cl := *sr.countLineRead + 1
@@ -184,6 +183,10 @@ func isTruncated(file *os.File) (bool, error) {
 	return currentPos > fileInfo.Size(), nil
 }
 
+func cleanString(s string) string {
+	return strings.TrimPrefix(strings.TrimSuffix(strings.TrimSuffix(s, "\n"), " "), " ")
+}
+
 func (sr *ScanReport) parseLine(l string) {
 	// List of ignoredLines
 	if l == "--------------------------------------" || l == "----------- SCAN SUMMARY -----------" || l == "" || strings.Contains(l, "ERROR: Could not connect to clamd") {
@@ -193,9 +196,9 @@ func (sr *ScanReport) parseLine(l string) {
 
 	// List of parsedLines
 	if reportStatusHostFS, b := strings.CutPrefix(l, "/host-fs: "); b {
-		log.Debug("HostFS report status: ", reportStatusHostFS)
+		log.Debug("HostFS report status: ", cleanString(reportStatusHostFS))
 
-		if reportStatusHostFS == "OK" {
+		if cleanString(reportStatusHostFS) == "OK" {
 			sr.setReportStatus(true)
 		} else {
 			sr.setReportStatus(false)
@@ -205,8 +208,8 @@ func (sr *ScanReport) parseLine(l string) {
 		return
 	}
 	if reportInfectedFiles, b := strings.CutPrefix(l, "Infected files: "); b {
-		log.Debug("Report infected files: ", reportInfectedFiles)
-		infectedFiles, errConvInt := strconv.Atoi(reportInfectedFiles)
+		log.Debug("Report infected files: ", cleanString(reportInfectedFiles))
+		infectedFiles, errConvInt := strconv.Atoi(cleanString(reportInfectedFiles))
 		if errConvInt != nil {
 			log.Error("Error converting infected files to int: ", errConvInt)
 		}
@@ -215,8 +218,8 @@ func (sr *ScanReport) parseLine(l string) {
 		return
 	}
 	if reportTotalErrors, b := strings.CutPrefix(l, "Total errors: "); b {
-		log.Debug("Report errors: ", reportTotalErrors)
-		totalErrors, errConvInt := strconv.Atoi(reportTotalErrors)
+		log.Debug("Report errors: ", cleanString(reportTotalErrors))
+		totalErrors, errConvInt := strconv.Atoi(cleanString(reportTotalErrors))
 		if errConvInt != nil {
 			log.Error("Error converting total errors to int: ", errConvInt)
 		}
@@ -225,8 +228,8 @@ func (sr *ScanReport) parseLine(l string) {
 		return
 	}
 	if reportTime, b := strings.CutPrefix(l, "Time: "); b {
-		log.Debug("Report time: ", reportTime)
-		duration, errParseDuration := time.ParseDuration(strings.Split(reportTime, " ")[0] + "s")
+		log.Debug("Report time: ", cleanString(reportTime))
+		duration, errParseDuration := time.ParseDuration(cleanString(reportTime) + "s")
 		if errParseDuration != nil {
 			log.Error("Error converting report time to duration: ", errParseDuration)
 		}
@@ -235,8 +238,8 @@ func (sr *ScanReport) parseLine(l string) {
 		return
 	}
 	if reportStartDate, b := strings.CutPrefix(l, "Start Date: "); b {
-		log.Debug("Report start date: ", reportStartDate)
-		startDate, errParseTime := time.Parse("2006:01:02 15:04:05", reportStartDate)
+		log.Debug("Report start date: ", cleanString(reportStartDate))
+		startDate, errParseTime := time.Parse("2006:01:02 15:04:05", cleanString(reportStartDate))
 		if errParseTime != nil {
 			log.Error("Error converting report time to duration: ", errParseTime)
 		}
@@ -245,8 +248,8 @@ func (sr *ScanReport) parseLine(l string) {
 		return
 	}
 	if reportEndDate, b := strings.CutPrefix(l, "End Date: "); b {
-		log.Debug("Report end date: ", reportEndDate)
-		endDate, errParseTime := time.Parse("2006:01:02 15:04:05", reportEndDate)
+		log.Debug("Report end date: ", cleanString(reportEndDate))
+		endDate, errParseTime := time.Parse("2006:01:02 15:04:05", cleanString(reportEndDate))
 		if errParseTime != nil {
 			log.Error("Error converting report time to duration: ", errParseTime)
 		}
