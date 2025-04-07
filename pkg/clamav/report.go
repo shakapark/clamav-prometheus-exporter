@@ -184,7 +184,7 @@ func isTruncated(file *os.File) (bool, error) {
 }
 
 func cleanString(s string) string {
-	return strings.TrimPrefix(strings.TrimSuffix(strings.TrimSuffix(s, "\n"), " "), " ")
+	return strings.TrimSpace(strings.TrimSuffix(s, "\n"))
 }
 
 func (sr *ScanReport) parseLine(l string) {
