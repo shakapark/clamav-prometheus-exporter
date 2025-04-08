@@ -35,6 +35,7 @@ type ClamavCollector struct {
 	threadsIdle *prometheus.Desc
 	threadsMax  *prometheus.Desc
 	queue       *prometheus.Desc
+	pool        *prometheus.Desc
 	memHeap     *prometheus.Desc
 	memMmap     *prometheus.Desc
 	memUsed     *prometheus.Desc
@@ -53,6 +54,7 @@ func New(client clamav.Client, report *clamav.ScanReport) (*ClamavCollector, *Cl
 			threadsIdle: prometheus.NewDesc("clamav_threads_idle", "Shows idle threads", nil, nil),
 			threadsMax:  prometheus.NewDesc("clamav_threads_max", "Shows max threads", nil, nil),
 			queue:       prometheus.NewDesc("clamav_queue_length", "Shows queued items", nil, nil),
+			pool:        prometheus.NewDesc("clamav_pool_count", "Shows pool count", nil, nil),
 			memHeap:     prometheus.NewDesc("clamav_mem_heap_bytes", "Shows heap memory usage in bytes", nil, nil),
 			memMmap:     prometheus.NewDesc("clamav_mem_mmap_bytes", "Shows mmap memory usage in bytes", nil, nil),
 			memUsed:     prometheus.NewDesc("clamav_mem_used_bytes", "Shows used memory in bytes", nil, nil),
@@ -80,6 +82,7 @@ func (collector *ClamavCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- collector.threadsIdle
 	ch <- collector.threadsMax
 	ch <- collector.queue
+	ch <- collector.pool
 	ch <- collector.memHeap
 	ch <- collector.memMmap
 	ch <- collector.memUsed
@@ -108,6 +111,7 @@ func (collector *ClamavCollector) Collect(ch chan<- prometheus.Metric) {
 	collector.CollectMemoryStats(ch, string(stats))
 	collector.CollectThreads(ch, string(stats))
 	collector.CollectQueue(ch, string(stats))
+	collector.CollectPools(ch, string(stats))
 	collector.CollectBuildInfo(ch)
 }
 
@@ -167,6 +171,20 @@ func (collector *ClamavCollector) CollectQueue(ch chan<- prometheus.Metric, stat
 	if len(matches) > 0 {
 		ch <- prometheus.MustNewConstMetric(collector.queue, prometheus.GaugeValue, float(matches[0][1]))
 		log.Debug("queue: ", float(matches[0][1]))
+	}
+}
+
+func (collector *ClamavCollector) CollectPools(ch chan<- prometheus.Metric, stats string) {
+	// regex := regexp.MustCompile(`(?:QUEUE:|FILDES|STATS)\s+([0-9.]+|N\/A)`)
+	regex := regexp.MustCompile(`(?:POOLS:\s+([0-9.]+|N\/A)`)
+	matches := regex.FindAllStringSubmatch(stats, -1)
+
+	log.Debug("Matches Pools", matches)
+
+	// POOLS
+	if len(matches) > 0 {
+		ch <- prometheus.MustNewConstMetric(collector.pool, prometheus.GaugeValue, float(matches[0][1]))
+		log.Debug("pools: ", float(matches[0][1]))
 	}
 }
 
