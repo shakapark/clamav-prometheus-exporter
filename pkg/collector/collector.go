@@ -176,7 +176,7 @@ func (collector *ClamavCollector) CollectQueue(ch chan<- prometheus.Metric, stat
 
 func (collector *ClamavCollector) CollectPools(ch chan<- prometheus.Metric, stats string) {
 	// regex := regexp.MustCompile(`(?:QUEUE:|FILDES|STATS)\s+([0-9.]+|N\/A)`)
-	regex := regexp.MustCompile(`(?:POOLS:\s+([0-9.]+|N\/A)`)
+	regex := regexp.MustCompile(`POOLS:\s+([0-9.]+|N\/A)`)
 	matches := regex.FindAllStringSubmatch(stats, -1)
 
 	log.Debug("Matches Pools", matches)
