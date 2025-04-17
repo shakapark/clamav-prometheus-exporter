@@ -35,10 +35,11 @@ import (
 var version = ""
 
 var (
-	address string
-	port    int
-	network string
-	logLevel string
+	address        string
+	port           int
+	network        string
+	reportScanPath string
+	logLevel       string
 )
 
 func setLogLevel(level string) {
@@ -68,6 +69,7 @@ func init() {
 	flag.StringVar(&address, "clamav-address", "localhost", "ClamAV address to use")
 	flag.IntVar(&port, "clamav-port", 3310, "ClamAV port to use")
 	flag.StringVar(&network, "network", "tcp", "Network mode to use, typically tcp or unix (socket)")
+	flag.StringVar(&reportScanPath, "report-scan-path", "", "Path to clamscan report file (keep empty if you don't use clamscan)")
 	flag.StringVar(&logLevel, "log-level", "info", "Set the level of logging. (options: trace, debug, info, warn, error, fatal, panic)")
 
 	flag.Parse()
@@ -84,8 +86,11 @@ func main() {
 	}
 
 	client := clamav.New(address, network)
-	coll := collector.New(*client)
-	prometheus.MustRegister(coll)
+	reportScan := clamav.NewScanReport(reportScanPath)
+	go reportScan.Tail()
+	clamavCollector, clamscanCollector := collector.New(*client, reportScan)
+	prometheus.MustRegister(clamavCollector)
+	prometheus.MustRegister(clamscanCollector)
 
 	router := http.NewServeMux()
 	router.Handle("/metrics", promhttp.Handler())
