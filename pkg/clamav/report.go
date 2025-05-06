@@ -190,6 +190,9 @@ func cleanString(s string) string {
 func (sr *ScanReport) parseLine(l string) {
 	// List of ignoredLines
 	if l == "--------------------------------------" || l == "----------- SCAN SUMMARY -----------" || l == "" || strings.Contains(l, "ERROR: Could not connect to clamd") {
+		if l == "----------- SCAN SUMMARY -----------" {
+			sr.setTotalErrors(0)
+		}
 		sr.increaseIgnoredLineCount(1)
 		return
 	}
