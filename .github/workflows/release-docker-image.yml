@@ -1,4 +1,4 @@
-name: Publish MASTER Docker image
+name: Publish RELEASE Docker image
 
 on:
   push:
